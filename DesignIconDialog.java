@@ -14,6 +14,7 @@ import java.awt.event.ActionListener;
 import java.awt.font.TextAttribute;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.BoxLayout;
@@ -32,9 +33,13 @@ public class DesignIconDialog extends JDialog implements ActionListener {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	//Hashmap to map colors to their string representation
 	private HashMap<String, Color> colorsList = new HashMap<>();
+	//FlightFilter to be edided
 	private FlightFilter filter;
-	private FlightIcon icon;
+	//temporary FlightIcon to store changed until they're saved
+	private FlightPanel icon;
+	//ButtonGroup to control the selections of the colorButtons
 	private ButtonGroup colorBoxes = new ButtonGroup();
 
 	/**
@@ -42,20 +47,25 @@ public class DesignIconDialog extends JDialog implements ActionListener {
 	 * 
 	 * @param parent
 	 *            - the parent JFrame
-	 * @param vehicle
-	 *            - vehicle object that's icon is being designed
+	 * @param f
+	 *            - FlightFilter object that's icon is being designed
 	 */
-	public DesignIconDialog(JFrame parent, FlightFilter v) {
+	public DesignIconDialog(JFrame parent, FlightFilter f) {
 		super(parent, "Design Icon");
-		this.filter = v;
+		this.filter = f;
 		this.setModal(true);
-		icon = new FlightIcon(Color.red);
-		icon.changeColor(v.getIcon().getColor());
-		icon.setShape(v.getIcon().getShape());
+		icon = new FlightPanel(Color.red);
+		icon.setColor(f.getIcon().getColor());
+		icon.setShape(f.getIcon().getShape());		
+	}
+	
+	/**
+	 * Method for creating GUI
+	 */
+	public void setUpGUI(){
 		this.getContentPane().add(getPanel());
 		pack();
 		setVisible(true);
-
 	}
 
 	/**
@@ -98,14 +108,19 @@ public class DesignIconDialog extends JDialog implements ActionListener {
 		return designPanel;
 	}
 
+	
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-
+		/*
+		 * Apply and OK will copy the color and shape from the icon object into the passed in filter's icon,
+		 * Cancel will just dispose() and the data won't be saved
+		 */
 		if (e.getActionCommand().equals("Apply")) {
-			filter.getIcon().changeColor(icon.getColor());
+			filter.getIcon().setColor(icon.getColor());
 			filter.getIcon().setShape(icon.getShape());
 		} else if (e.getActionCommand().equals("OK")) {
-			filter.getIcon().changeColor(icon.getColor());
+			filter.getIcon().setColor(icon.getColor());
 			filter.getIcon().setShape(icon.getShape());
 			dispose();
 		} else if (e.getActionCommand().equals("Cancel")) {
@@ -115,7 +130,7 @@ public class DesignIconDialog extends JDialog implements ActionListener {
 			// action command to set color
 		} else if (colorsList.get(e.getActionCommand()) != null) {
 			colorBoxes.clearSelection();
-			icon.changeColor(colorsList.get(e.getActionCommand()));
+			icon.setColor(colorsList.get(e.getActionCommand()));
 			icon.repaint();
 			JCheckBox cb = (JCheckBox) e.getSource();
 			cb.setSelected(true);
@@ -185,7 +200,6 @@ public class DesignIconDialog extends JDialog implements ActionListener {
 		shapeComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				icon.setShape(shapeComboBox.getSelectedItem().toString());
-				System.out.println(shapeComboBox.getSelectedItem().toString());
 				icon.repaint();
 				// "this" here would refer to the ActionListener (not that
 				// useful)
@@ -216,14 +230,14 @@ public class DesignIconDialog extends JDialog implements ActionListener {
 
 		colorWrapper.add(labelPanel, BorderLayout.NORTH);
 		JPanel colorPanel = new JPanel(new GridLayout(6, 6));
-		// colorPanel.setPreferredSize(new Dimension(400, 400));
+		
 
-		ArrayList<Color> colors = ColorList.getColors();
-
+		List<Color> colors = ColorList.getColors();
+		/*Add the list of colors to the ColorPanel, and set them a selectedIcon and actionCommand, add them to the HashMap 
+		* so they can be found via their string representation
+		*/
 		for (Color c : colors) {
-
 			ColorIcon cIcon = new ColorIcon(c, 30, 30);
-
 			JCheckBox cb = new JCheckBox(cIcon);
 			cb.setSelectedIcon(cIcon.getRolloverIcon());
 			cb.setActionCommand(cIcon.getColor().toString());
@@ -231,10 +245,10 @@ public class DesignIconDialog extends JDialog implements ActionListener {
 			cb.addActionListener(this);
 			colorBoxes.add(cb);
 			colorPanel.add(cb);
-			//to check starting color
+			//Sets the currently selected color as selected when entering the dialog
 			if (c.equals(filter.getIcon().getColor())) {
 				cb.setSelected(true);
-				System.out.println(c);
+				
 			}
 
 		}
@@ -284,6 +298,11 @@ public class DesignIconDialog extends JDialog implements ActionListener {
 		return buttonPanel;
 	}
 
+	/**
+	 * method to create the marking panel. Its unclear what the marking and border comboBoxes will do at this point
+	 * @return JPanel 
+	 */
+	//TODO marking and border comboBoxes need functionality added
 	private JPanel getMarkingPanel() {
 		JPanel markingWrapper = new JPanel(new BorderLayout());
 		// label panel set up
@@ -297,15 +316,8 @@ public class DesignIconDialog extends JDialog implements ActionListener {
 		// marking panel
 		JPanel markingPanel = new JPanel();
 		markingPanel.setLayout(new BoxLayout(markingPanel, BoxLayout.Y_AXIS));
-		
-		
-		
-		String[] markingList = { "<NONE>", "1" };
-		JComboBox<String> markingBox = new JComboBox<String>(markingList);
-		JLabel markingBoxLabel = new JLabel("Marking");
-		
+
 		// marking label and combobox set up
-		/*
 		JPanel markingBoxPanel = new JPanel(new GridBagLayout());
 		String[] markingList = { "<NONE>", "1" };
 		JComboBox<String> markingBox = new JComboBox<String>(markingList);
@@ -315,10 +327,8 @@ public class DesignIconDialog extends JDialog implements ActionListener {
 		markingBoxPanel.add(markingBox);
 
 		markingPanel.add(markingBoxPanel);
-		
 
 		// border label and combo box set up
-		
 		JPanel borderBoxPanel = new JPanel(new GridBagLayout());
 		String[] borderList = { "<NONE>", "Red", "Blue" };
 		JComboBox<String> borderBox = new JComboBox<String>(borderList);
@@ -329,28 +339,10 @@ public class DesignIconDialog extends JDialog implements ActionListener {
 		markingPanel.add(borderBoxPanel);
 
 		markingWrapper.add(markingPanel);
-		*/
-		
-		
 
 		return markingWrapper;
 	}
 	
-	   private GridBagConstraints createGbc(int x, int y) {
-		      GridBagConstraints gbc = new GridBagConstraints();
-		      gbc.gridx = x;
-		      gbc.gridy = y;
-		      gbc.gridwidth = 1;
-		      gbc.gridheight = 1;
-
-		      gbc.anchor = (x == 0) ? GridBagConstraints.WEST : GridBagConstraints.EAST;
-		      gbc.fill = (x == 0) ? GridBagConstraints.BOTH
-		            : GridBagConstraints.HORIZONTAL;
-
-		      //gbc.insets = (x == 0) ? WEST_INSETS : EAST_INSETS;
-		      gbc.weightx = (x == 0) ? 0.1 : 1.0;
-		      gbc.weighty = 1.0;
-		      return gbc;
-		   }
+	  
 
 }

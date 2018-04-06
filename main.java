@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -21,7 +22,7 @@ public class main {
         
         JFrame abc = new JFrame();
         JPanel ab = new JPanel();
-        ArrayList<FlightFilter> flights = new ArrayList<>();
+        List<FlightFilter> flights = new ArrayList<>();
         abc.add(ab);
         
         JButton open = new JButton("selectFlightMenu");
